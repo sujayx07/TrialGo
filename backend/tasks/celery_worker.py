@@ -84,11 +84,12 @@ def task_send_daily_reminders():
 
         trial_name = trial.disease if trial else "your trial"
 
+        frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
         message = (
             f"Hi! This is TrialGo. "
             f"Please upload your daily health data "
             f"for {trial_name} today. "
-            f"Open the app: http://localhost:3000/dashboard "
+            f"Open the app: {frontend_url}/dashboard "
             f"Your data helps the research team monitor "
             f"your health. Reply STOP to unsubscribe."
         )
