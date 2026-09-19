@@ -9,3 +9,4 @@ celery -A tasks.celery_worker beat --loglevel=info &
 
 echo "Starting FastAPI..."
 exec python start.py
+ 
