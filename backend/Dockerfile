@@ -26,6 +26,9 @@ ENV PYTHONUNBUFFERED=1
 COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /app /app
 
+RUN chmod +x /app/start_all.sh
+
 EXPOSE 8000
 
-CMD ["python", "start.py"]
+CMD ["bash", "start_all.sh"]
+
