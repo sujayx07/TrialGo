@@ -64,13 +64,14 @@ services:
         sync: false
 
   # ─── Celery Worker ────────────────────────────────────────────────────────
+  # Uses its own Dockerfile (Dockerfile.celery_worker) with the worker CMD baked in.
+  # Docker runtime does not support startCommand — CMD must be in the Dockerfile.
   - type: worker
     name: trialgo-celery-worker
     runtime: docker
-    dockerfilePath: ./backend/Dockerfile
+    dockerfilePath: ./backend/Dockerfile.celery_worker
     dockerContext: ./backend
     plan: free
-    startCommand: celery -A tasks.celery_worker worker --loglevel=info --concurrency=2
     envVars:
       - key: DATABASE_URL
         sync: false
@@ -118,13 +119,13 @@ services:
         sync: false
 
   # ─── Celery Beat Scheduler ────────────────────────────────────────────────
+  # Uses its own Dockerfile (Dockerfile.celery_beat) with the beat CMD baked in.
   - type: worker
     name: trialgo-celery-beat
     runtime: docker
-    dockerfilePath: ./backend/Dockerfile
+    dockerfilePath: ./backend/Dockerfile.celery_beat
     dockerContext: ./backend
     plan: free
-    startCommand: celery -A tasks.celery_worker beat --loglevel=info
     envVars:
       - key: DATABASE_URL
         sync: false
@@ -148,3 +149,4 @@ services:
     name: trialgo-redis
     plan: free
     maxmemoryPolicy: noeviction
+    ipAllowList: []   # empty = allow all (required field for Render Redis)
