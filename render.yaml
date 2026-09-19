@@ -1,0 +1,150 @@
+services:
+  # ─── FastAPI Backend ──────────────────────────────────────────────────────
+  - type: web
+    name: trialgo-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_EXPIRE_MINUTES
+        value: "10080"
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: trialgo-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: trialgo-redis
+          property: connectionString
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_REGION
+        value: us-east-1
+      - key: S3_BUCKET_CONSENT
+        value: trialgo-consent-docs
+      - key: S3_BUCKET_REPORTS
+        value: trialgo-patient-reports
+      - key: S3_BUCKET_WEARABLE
+        value: trialgo-wearable-data
+      - key: S3_BUCKET_FHIR
+        value: trialgo-fhir-bundles
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_PHONE_NUMBER
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: SENDGRID_FROM_EMAIL
+        value: noreply@trialgo.ai
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: HF_TOKEN
+        sync: false
+      - key: HF_MODEL_NAME
+        value: facebook/nllb-200-distilled-600M
+      - key: FHIR_BASE_URL
+        value: https://hapi.fhir.org/baseR4
+      - key: TWITTER_BEARER_TOKEN
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+
+  # ─── Celery Worker ────────────────────────────────────────────────────────
+  - type: worker
+    name: trialgo-celery-worker
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    startCommand: celery -A tasks.celery_worker worker --loglevel=info --concurrency=2
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: trialgo-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: trialgo-redis
+          property: connectionString
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_REGION
+        value: us-east-1
+      - key: S3_BUCKET_CONSENT
+        value: trialgo-consent-docs
+      - key: S3_BUCKET_REPORTS
+        value: trialgo-patient-reports
+      - key: S3_BUCKET_WEARABLE
+        value: trialgo-wearable-data
+      - key: S3_BUCKET_FHIR
+        value: trialgo-fhir-bundles
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_PHONE_NUMBER
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: HF_TOKEN
+        sync: false
+      - key: HF_MODEL_NAME
+        value: facebook/nllb-200-distilled-600M
+      - key: FRONTEND_URL
+        sync: false
+
+  # ─── Celery Beat Scheduler ────────────────────────────────────────────────
+  - type: worker
+    name: trialgo-celery-beat
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    startCommand: celery -A tasks.celery_worker beat --loglevel=info
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: trialgo-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: trialgo-redis
+          property: connectionString
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+
+  # ─── Redis ────────────────────────────────────────────────────────────────
+  - type: redis
+    name: trialgo-redis
+    plan: free
+    maxmemoryPolicy: noeviction
